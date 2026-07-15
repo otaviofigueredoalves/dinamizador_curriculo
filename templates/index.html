@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dinamizador de Currículo IA</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dinamizador de Currículo</h1>
+            <p>Faça o upload do seu template DOCX, insira o link da vaga e suas habilidades. Nossa IA adaptará o currículo para a oportunidade.</p>
+        </div>
+
+        <div class="card">
+            <form id="resumeForm" action="/process" method="POST" enctype="multipart/form-data">
+                
+                <div class="form-group">
+                    <label>1. Template do Currículo (.docx)</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="template_file" name="template_file" accept=".docx" required>
+                        <div class="file-upload-text">Arraste e solte ou clique para selecionar seu DOCX</div>
+                        <div class="file-name-display" id="file_name">Nenhum arquivo selecionado</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="linkedin_url">2. Link da Vaga OU Texto da Vaga (Se o site bloquear robôs)</label>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Para vagas do Indeed ou sites com proteção (Security Check), apenas copie e cole todo o texto da vaga aqui.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <textarea id="linkedin_url" name="linkedin_url" class="form-control" placeholder="Ex: https://linkedin.com/jobs/view/... OU cole a descrição inteira da vaga aqui" rows="4" required></textarea>
+                        <button type="button" class="btn-primary" id="validateLinkBtn" style="width: auto; white-space: nowrap; align-self: flex-start;">Validar Vaga</button>
+                    </div>
+                    <div id="job-info-notification" class="alert" style="display: none; margin-top: 10px; background-color: #E3F2FD; border-color: #0A66C2; color: #0A66C2;">
+                        <!-- Notificação será injetada aqui -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="linkedin_pdf_file">2.5 Currículo do LinkedIn (PDF) - Opcional</label>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Vá no seu perfil do LinkedIn > Mais > Salvar como PDF. Envie aqui para não digitar nada!</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="file" id="linkedin_pdf_file" accept=".pdf" class="form-control" style="flex: 1;">
+                        <button type="button" class="btn-primary" id="extractProfileBtn" style="width: auto; white-space: nowrap;">Extrair Texto</button>
+                    </div>
+                    <div id="profile-info-notification" class="alert" style="display: none; margin-top: 10px; background-color: #E3F2FD; border-color: #0A66C2; color: #0A66C2;">
+                        <!-- Notificação será injetada aqui -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="user_skills">3. Suas Habilidades e Experiências (Contexto Base)</label>
+                    <textarea id="user_skills" name="user_skills" class="form-control" placeholder="Ex: Python, Flask, React. Experiência de 3 anos desenvolvendo APIs web... Liste suas tags de habilidades principais." required></textarea>
+                </div>
+
+                <div id="error-message" class="alert alert-error" style="display: none;"></div>
+
+                <button type="submit" class="btn-primary" id="submitBtn">Dinamizar Currículo</button>
+
+                <div id="loading-indicator" style="display: none; margin-top: 15px; font-weight: 500; color: #0A66C2;">
+                    ⏳ Lendo IA, processando vaga e gerando documentos. Isso pode levar alguns segundos...
+                </div>
+                
+                <div id="final-notification" class="alert" style="display: none; margin-top: 20px; background-color: #0A66C2; color: #FFFFFF; border-radius: 0; padding: 20px;">
+                    <h3 style="margin-top: 0; margin-bottom: 10px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600;">✅ Currículo Gerado com Sucesso!</h3>
+                    <p style="margin-bottom: 20px;">Seu currículo foi adaptado perfeitamente para a vaga. Escolha o formato para baixar:</p>
+                    <div style="display: flex; gap: 10px;">
+                        <a id="btn-download-pdf" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; display: inline-block; text-align: center; font-weight: 600;">📄 Baixar em PDF</a>
+                        <a id="btn-download-docx" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; display: inline-block; text-align: center; font-weight: 600;">📝 Baixar em DOCX</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('template_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Nenhum arquivo selecionado';
+            document.getElementById('file_name').textContent = fileName;
+        });
+
+        document.getElementById('validateLinkBtn').addEventListener('click', async function() {
+            const url = document.getElementById('linkedin_url').value;
+            const notif = document.getElementById('job-info-notification');
+            const btn = document.getElementById('validateLinkBtn');
+            
+            if (!url) {
+                notif.style.display = 'block';
+                notif.textContent = 'Por favor, insira a URL ou o texto da vaga.';
+                notif.style.backgroundColor = '#FDE8E9';
+                notif.style.borderColor = '#D11124';
+                notif.style.color = '#D11124';
+                return;
+            }
+
+            if (!url.startsWith('http')) {
+                notif.style.display = 'block';
+                notif.innerHTML = `<strong>Texto reconhecido!</strong> Como você colou um texto em vez de um link, nós o usaremos diretamente como a descrição da vaga.`;
+                notif.style.backgroundColor = '#E3F2FD';
+                notif.style.borderColor = '#0A66C2';
+                notif.style.color = '#0A66C2';
+                return;
+            }
+            
+            btn.textContent = 'Validando...';
+            btn.disabled = true;
+            notif.style.display = 'none';
+            notif.style.backgroundColor = '#E3F2FD';
+            notif.style.borderColor = '#0A66C2';
+            notif.style.color = '#0A66C2';
+            
+            try {
+                const response = await fetch('/api/scrape-info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await response.json();
+                
+                notif.style.display = 'block';
+                if (data.error) {
+                    notif.textContent = 'Erro ao buscar dados: ' + data.error;
+                    notif.style.backgroundColor = '#FDE8E9';
+                    notif.style.borderColor = '#D11124';
+                    notif.style.color = '#D11124';
+                } else {
+                    notif.innerHTML = `<strong>Vaga Lida com Sucesso!</strong><br>Título da Vaga: ${data.title}<br>Autor/Empresa: ${data.company}`;
+                }
+            } catch (err) {
+                notif.style.display = 'block';
+                notif.textContent = 'Erro de conexão ao validar o link.';
+                notif.style.backgroundColor = '#FDE8E9';
+                notif.style.borderColor = '#D11124';
+                notif.style.color = '#D11124';
+            } finally {
+                btn.textContent = 'Validar Link';
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('extractProfileBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('linkedin_pdf_file');
+            const notif = document.getElementById('profile-info-notification');
+            const btn = document.getElementById('extractProfileBtn');
+            const textarea = document.getElementById('user_skills');
+            
+            if (!fileInput.files.length) {
+                notif.style.display = 'block';
+                notif.textContent = 'Por favor, selecione o PDF exportado do seu LinkedIn.';
+                notif.style.backgroundColor = '#FDE8E9';
+                notif.style.borderColor = '#D11124';
+                notif.style.color = '#D11124';
+                return;
+            }
+            
+            btn.textContent = 'Extraindo...';
+            btn.disabled = true;
+            notif.style.display = 'none';
+            notif.style.backgroundColor = '#E3F2FD';
+            notif.style.borderColor = '#0A66C2';
+            notif.style.color = '#0A66C2';
+            
+            const formData = new FormData();
+            formData.append('pdf_file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('/api/scrape-profile', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                notif.style.display = 'block';
+                if (data.error) {
+                    notif.textContent = 'Erro: ' + data.error;
+                    notif.style.backgroundColor = '#FDE8E9';
+                    notif.style.borderColor = '#D11124';
+                    notif.style.color = '#D11124';
+                } else {
+                    notif.innerHTML = `<strong>Texto Extraído!</strong> O conteúdo foi colado na seção 3 abaixo.`;
+                    textarea.value = (textarea.value ? textarea.value + "\n\n" : "") + "[DADOS EXTRAÍDOS DO PDF DO LINKEDIN]:\n" + data.text;
+                }
+            } catch (err) {
+                notif.style.display = 'block';
+                notif.textContent = 'Erro de conexão ao ler o PDF.';
+                notif.style.backgroundColor = '#FDE8E9';
+                notif.style.borderColor = '#D11124';
+                notif.style.color = '#D11124';
+            } finally {
+                btn.textContent = 'Extrair Texto';
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('resumeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const errorDiv = document.getElementById('error-message');
+            const loadingDiv = document.getElementById('loading-indicator');
+            const finalNotif = document.getElementById('final-notification');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+            errorDiv.style.display = 'none';
+            finalNotif.style.display = 'none';
+            loadingDiv.style.display = 'block';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        document.getElementById('btn-download-pdf').href = '/download/pdf/' + data.filename;
+                        document.getElementById('btn-download-docx').href = '/download/docx/' + data.filename;
+                        
+                        loadingDiv.style.display = 'none';
+                        finalNotif.style.display = 'block';
+                        finalNotif.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        throw new Error(data.error || 'Erro desconhecido ao processar o currículo');
+                    }
+                } else {
+                    const textError = await response.text();
+                    throw new Error(textError || 'Falha no servidor ao processar o arquivo');
+                }
+            } catch (err) {
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Erro: ' + err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Dinamizar Currículo';
+            }
+        });
+    </script>
+</body>
+</html>

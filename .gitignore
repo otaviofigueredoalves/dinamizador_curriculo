@@ -1,0 +1,22 @@
+# Ambientes Virtuais
+venv/
+.venv/
+env/
+.env
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Uploads e Arquivos Temporários
+/tmp/
+/uploads/
+*.pdf
+*.docx
+!curriculo_ats_template.docx
+
+# Arquivos de Sistema Operacional
+.DS_Store
+Thumbs.db

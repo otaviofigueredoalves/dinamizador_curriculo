@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      # A API KEY do Gemini deve ser passada pelo arquivo .env ou pelas variáveis da sua nuvem
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: always

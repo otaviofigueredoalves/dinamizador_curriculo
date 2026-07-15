@@ -1,0 +1,80 @@
+# Resume Dynamizer 🚀
+
+O **Resume Dynamizer** é um sistema inteligente movido por Inteligência Artificial (Gemini) projetado para otimizar e adaptar currículos para sistemas ATS (Applicant Tracking Systems) de forma dinâmica e automatizada. 
+
+Ele cruza as suas experiências base com a descrição de uma vaga específica (LinkedIn, Indeed ou texto livre) e injeta o resultado formatado e otimizado com palavras-chave diretamente em um documento Word, gerando também a versão final em PDF.
+
+---
+
+## ⚙️ Como Funciona
+1. **Coleta de Dados:** O sistema raspa (scrape) as informações e requisitos da vaga escolhida através do link do LinkedIn/Indeed ou via texto colado.
+2. **Processamento (IA):** O motor de IA analisa o histórico do candidato (extraído do template base) e recria os textos focando estritamente em palavras-chave da vaga, sem invenções, evitando formatações complexas que quebram a leitura dos ATS.
+3. **Geração do Documento:** Usando bibliotecas de processamento Word (`docxtpl`), as variáveis geradas pela IA são fundidas no arquivo `.docx` fornecido e, em seguida, convertidas para PDF via LibreOffice Headless.
+
+---
+
+## 🛠️ Como Usar (Ambiente Local)
+
+1. Clone o repositório.
+2. Crie um arquivo `.env` na raiz do projeto com a sua chave secreta da Google:
+   ```env
+   GEMINI_API_KEY=sua_chave_aqui
+   ```
+3. Crie e ative um ambiente virtual Python.
+4. Instale as dependências:
+   ```bash
+   pip install -r requirements.txt
+   playwright install --with-deps chromium
+   ```
+5. *(Opcional para Linux)* Para a geração de PDF, é necessário ter o LibreOffice instalado no seu sistema operacional (`sudo apt install libreoffice`).
+6. Rode a aplicação:
+   ```bash
+   python app.py
+   ```
+7. Acesse `http://127.0.0.1:5000` no seu navegador.
+
+---
+
+## 🐳 Como Usar (Produção / Docker)
+O projeto já conta com um `Dockerfile` preparado para a nuvem. Ele baixa o LibreOffice, os navegadores sem interface e expõe o servidor robusto Gunicorn:
+```bash
+# Iniciar o container em plano de fundo:
+docker compose up -d --build
+```
+*Nota: Recomenda-se um servidor com pelo menos 1GB de RAM para suportar a geração simultânea via Gunicorn e LibreOffice.*
+
+---
+
+## 📝 Regras do Template DOCX (Guia de Variáveis)
+
+**Você pode usar o template base incluso no projeto (`curriculo_ats_template.docx`) ou criar o seu próprio modelo do zero!** 
+A única exigência para usar qualquer documento Word é que você insira as tags de variáveis (listadas abaixo) nos lugares onde deseja que a Inteligência Artificial atue.
+
+> ⚠️ **Informações Estáticas (Edição Manual):** O sistema foca apenas em dinamizar suas áreas profissionais de acordo com a vaga. Textos fixos como seu Nome, Telefones, Bairro, Nível de Idiomas e Formação Acadêmica NÃO são alterados pela IA. Eles devem ser editados por você de forma manual direto no seu arquivo DOCX, sem o uso de chaves.
+
+Nos blocos dinâmicos do seu documento, insira as tags abaixo. Você pode formatar as tags como quiser (Negrito, Azul, Itálico), e o sistema herdará essa formatação!
+
+### Cabeçalho
+- **`{{ titulo_adaptado }}`**
+  *(Ex: Desenvolvedor PHP | APIs | MySQL)*
+- **`{{ objetivo_adaptado }}`**
+  *(Ex: Atuar como desenvolvedor...)*
+- **`{{ resumo_adaptado }}`**
+  *(Texto corrido com seus highlights adaptados à vaga).*
+
+### Experiências Profissionais
+A IA agora mapeia suas experiências de forma numerada. Você deve colocar o título e a descrição de cada experiência separadamente para manter a formatação distinta:
+
+**Experiência 1:**
+- **`{{ titulo_experiencia_1 }}`** *(Coloque em Negrito no Word)*
+- **`{{ experiencia_adaptada_1 }}`** *(Deixe sem formatação)*
+
+**Experiência 2:**
+- **`{{ titulo_experiencia_2 }}`** *(Coloque em Negrito no Word)*
+- **`{{ experiencia_adaptada_2 }}`** *(Deixe sem formatação)*
+
+*(Faça isso para o número de experiências (3, 4) que você tem em seu template).*
+
+### Habilidades (Skillset)
+- **`{{ skills_adaptadas }}`**
+  *(Lista formatada por vírgulas contendo apenas as tecnologias exigidas e que você possui).*
