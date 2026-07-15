@@ -20,10 +20,10 @@ Sua tarefa é analisar as habilidades/experiências passadas de um candidato e a
 4. TÍTULO: Deve seguir o formato exato: "Cargo | Palavra-Chave 1 | Palavra-Chave 2"
 5. OBJETIVO: Escrever de forma direta o cargo, área e função que gostaria de atuar.
 6. HIGHLIGHTS (Resumo): Foque em cases de sucesso e experiências do histórico que sejam altamente relevantes para a posição atual. Adapte os cases conforme necessário para a vaga.
-23. 7. EXPERIÊNCIAS (Título e Descrição): Crie um campo 'experiencias' que seja uma LISTA (array) JSON contendo objetos para cada empresa do histórico. Cada objeto deve ter 'titulo_experiencia' com o cabeçalho ("Empresa - Cargo - Senioridade 20XX - 20XX") e 'experiencia_adaptada' com a descrição.
-24. 8. SKILLS (Skillset): Liste apenas ferramentas e recursos que o candidato tem vivência e que tenham relevância direta para a área/vaga. Separar por vírgula.
-25. 9. VERACIDADE: Nunca invente experiências que o candidato não citou.
-26. FORMATO JSON E QUEBRAS DE LINHA: NUNCA insira quebras de linha reais dentro das strings do JSON. Se precisar quebrar linha, use ESTRITAMENTE os caracteres '\\n' escapados. Seu retorno deve ser um JSON válido.
+7. EXPERIÊNCIAS (Título e Descrição): Crie um campo 'experiencias' que seja uma LISTA (array) JSON contendo objetos para cada empresa do histórico. Cada objeto deve ter 'titulo_experiencia' com o cabeçalho ("Empresa - Cargo - Senioridade 20XX - 20XX") e 'experiencia_adaptada' com a descrição.
+8. SKILLS (Skillset): Liste apenas ferramentas e recursos que o candidato tem vivência e que tenham relevância direta para a área/vaga. Separar por vírgula.
+9. VERACIDADE: Nunca invente experiências que o candidato não citou.
+26. FORMATO JSON E QUEBRAS DE LINHA: NUNCA insira quebras de linha reais dentro das strings do JSON (use \\n). NUNCA use aspas duplas (") dentro dos textos (use aspas simples). Seu retorno deve ser um JSON perfeitamente válido e escapado.
 
 [HABILIDADES E EXPERIÊNCIAS BASE DO CANDIDATO]:
 {base_skills}
@@ -62,13 +62,12 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
 
     try:
         raw_text = response.text.strip()
-        if raw_text.startswith("```json"):
-            raw_text = raw_text.replace("```json", "", 1)
-        if raw_text.startswith("```"):
-            raw_text = raw_text.replace("```", "", 1)
-        if raw_text.endswith("```"):
-            raw_text = "```".join(raw_text.rsplit("```", 1)[0:1])
-        raw_text = raw_text.strip()
+        
+        # Usa regex para extrair tudo o que estiver entre a primeira { e a última } 
+        import re
+        match = re.search(r'\{.*\}', raw_text, re.DOTALL)
+        if match:
+            raw_text = match.group(0)
         
         # Usa strict=False para permitir quebras de linha reais que a IA gera por engano
         try:
@@ -103,6 +102,7 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
             "titulo_adaptado": "Falha no Título",
             "objetivo_adaptado": "Falha no Objetivo",
             "resumo_adaptado": "Falha ao gerar resumo.",
-            "experiencia_adaptada": response.text,
+            "titulo_experiencia_1": "Motivo da Falha:",
+            "experiencia_adaptada_1": response.text,
             "skills_adaptadas": "Falha nas skills"
         }
