@@ -247,5 +247,64 @@
             }
         });
     </script>
+    <button class="donate-btn" id="openDonateModal">
+        ☕ Apoie o Projeto
+    </button>
+
+    <!-- Modal de Doação (Pix) -->
+    <div class="donate-modal-overlay" id="donateModal">
+        <div class="donate-modal-content">
+            <span class="donate-modal-close" id="closeDonateModal">&times;</span>
+            <h2 style="margin-bottom: 15px; font-weight: 600;">☕ Me pague um café!</h2>
+            <p style="margin-bottom: 20px; font-size: 15px; color: #666; line-height: 1.5;">
+                Essa ferramenta é 100% gratuita! Se ela te ajudou a conseguir uma entrevista ou poupou horas do seu tempo, considere apoiar o desenvolvimento. 
+            </p>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="/static/img/pix.png" alt="QR Code Pix" style="max-width: 200px; border-radius: 8px; border: 1px solid #DCE0E1;">
+            </div>
+            <div style="background-color: #F3F2EF; padding: 15px; border-radius: 8px; text-align: center;">
+                <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Ou copie a chave Pix (CNPJ):</p>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="pixKey" value="63039836000110" class="form-control" style="font-family: monospace; font-size: 14px; background-color: #FFF;" readonly>
+                    <button class="btn-primary" id="copyPixBtn" style="width: auto; white-space: nowrap;">Copiar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const donateModal = document.getElementById('donateModal');
+        const openDonateModal = document.getElementById('openDonateModal');
+        const closeDonateModal = document.getElementById('closeDonateModal');
+        const copyPixBtn = document.getElementById('copyPixBtn');
+        const pixKeyInput = document.getElementById('pixKey');
+
+        openDonateModal.addEventListener('click', () => {
+            donateModal.style.display = 'flex';
+        });
+
+        closeDonateModal.addEventListener('click', () => {
+            donateModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === donateModal) {
+                donateModal.style.display = 'none';
+            }
+        });
+
+        copyPixBtn.addEventListener('click', () => {
+            pixKeyInput.select();
+            document.execCommand('copy');
+            const originalText = copyPixBtn.textContent;
+            copyPixBtn.textContent = 'Copiado! ✓';
+            copyPixBtn.style.backgroundColor = '#107c10';
+            copyPixBtn.style.color = '#FFF';
+            setTimeout(() => {
+                copyPixBtn.textContent = originalText;
+                copyPixBtn.style.backgroundColor = ''; 
+            }, 3000);
+        });
+    </script>
 </body>
 </html>
