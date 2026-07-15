@@ -78,3 +78,11 @@ A IA agora mapeia suas experiências de forma numerada. Você deve colocar o tí
 ### Habilidades (Skillset)
 - **`{{ skills_adaptadas }}`**
   *(Lista formatada por vírgulas contendo apenas as tecnologias exigidas e que você possui).*
+
+---
+
+## 🏆 Créditos
+O arquivo base/molde (`curriculo_ats_template.docx`) que inspira o sucesso deste gerador foi idealizado de forma gratuita pela excelente **Mel (@mocinhadorh)**. Todo o mérito do design focado em ATS (cores, divisões e fontes limpas) pertence a ela. 
+
+O motor de Inteligência Artificial, o processamento de texto e a arquitetura web (todo o código) deste projeto foram desenvolvidos 100% por **[Otávio Alves (@otaviofigueredoalves)](https://github.com/otaviofigueredoalves)** de forma independente para ajudar a comunidade tech. 
+Acesse o template visual original no Google Docs: [Clique Aqui](https://docs.google.com/document/d/1TmiWHUhvlLMlAK0vtEziA9JQ85idSCtX/edit).
