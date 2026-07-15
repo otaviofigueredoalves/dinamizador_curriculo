@@ -61,22 +61,13 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
     )
 
     try:
+        from json_repair import repair_json
+        
         raw_text = response.text.strip()
         
-        # Usa regex para extrair tudo o que estiver entre a primeira { e a última } 
-        import re
-        match = re.search(r'\{.*\}', raw_text, re.DOTALL)
-        if match:
-            raw_text = match.group(0)
-        
-        # Usa strict=False para permitir quebras de linha reais que a IA gera por engano
-        try:
-            data = json.loads(raw_text, strict=False)
-        except json.JSONDecodeError:
-            # Fallback iterativo caso haja lixo ou chaves extras no fim
-            while raw_text and not raw_text.endswith("}"):
-                raw_text = raw_text[:-1]
-            data = json.loads(raw_text, strict=False)
+        # O repair_json conserta aspas não escapadas, chaves faltando no final e lixos no começo/fim.
+        repaired_string = repair_json(raw_text)
+        data = json.loads(repaired_string)
         
         expected_keys = ["titulo_adaptado", "objetivo_adaptado", "resumo_adaptado", "skills_adaptadas"]
         for key in expected_keys:
