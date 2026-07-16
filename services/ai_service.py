@@ -72,7 +72,7 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
                 print("Iniciando fallback via Groq...")
                 groq_client = Groq(api_key=groq_api_key)
                 completion = groq_client.chat.completions.create(
-                    model="llama3-70b-8192",
+                    model="llama-3.3-70b-versatile",
                     messages=[
                         {"role": "system", "content": "You must output valid JSON only, without markdown formatting."},
                         {"role": "user", "content": prompt}
