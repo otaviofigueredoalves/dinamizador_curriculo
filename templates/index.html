@@ -77,9 +77,54 @@
             Desenvolvido por <a href="https://github.com/otaviofigueredoalves" target="_blank" style="color: #0A66C2; font-weight: bold; text-decoration: none;">Otávio Alves (@otaviofigueredoalves)</a><br>
             <span style="font-size: 0.75rem; opacity: 0.8;">Template ATS visual idealizado originalmente por <a href="https://docs.google.com/document/d/1TmiWHUhvlLMlAK0vtEziA9JQ85idSCtX/edit" target="_blank" style="color: #0A66C2; text-decoration: none;">Mel (@mocinhadorh)</a>.</span>
         </div>
+        </div>
     </div>
 
+    <div id="toast-container" class="toast-container"></div>
+
     <script>
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'ℹ️';
+            if(type === 'success') icon = '✅';
+            if(type === 'error') icon = '❌';
+            
+            toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        async function fetchWithRetry(url, options, maxRetries = 3, btnElement = null) {
+            let retries = 0;
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status === 502 || response.status === 503 || response.status === 504) {
+                        throw new Error(`Server overload: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    retries++;
+                    if (retries >= maxRetries) {
+                        throw error;
+                    }
+                    console.log(`Retry ${retries}/${maxRetries} for ${url}`);
+                    if (btnElement) {
+                        btnElement.textContent = `Tentando dnv (${retries}/${maxRetries})...`;
+                    }
+                    showToast(`Ocorreu um erro. Tentando novamente (${retries}/${maxRetries})...`, 'info');
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+        }
+
         document.getElementById('template_file').addEventListener('change', function(e) {
             const fileName = e.target.files[0] ? e.target.files[0].name : 'Nenhum arquivo selecionado';
             document.getElementById('file_name').textContent = fileName;
@@ -116,20 +161,22 @@
             notif.style.color = '#0A66C2';
             
             try {
-                const response = await fetch('/api/scrape-info', {
+                const response = await fetchWithRetry('/api/scrape-info', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: url })
-                });
+                }, 3, btn);
                 const data = await response.json();
                 
                 notif.style.display = 'block';
                 if (data.error) {
+                    showToast('Falha ao validar link', 'error');
                     notif.textContent = 'Erro ao buscar dados: ' + data.error;
                     notif.style.backgroundColor = '#FDE8E9';
                     notif.style.borderColor = '#D11124';
                     notif.style.color = '#D11124';
                 } else {
+                    showToast('Link verificado com sucesso!', 'success');
                     notif.innerHTML = `<strong>Vaga Lida com Sucesso!</strong><br>Título da Vaga: ${data.title}<br>Autor/Empresa: ${data.company}`;
                 }
             } catch (err) {
@@ -170,19 +217,21 @@
             formData.append('pdf_file', fileInput.files[0]);
             
             try {
-                const response = await fetch('/api/scrape-profile', {
+                const response = await fetchWithRetry('/api/scrape-profile', {
                     method: 'POST',
                     body: formData
-                });
+                }, 3, btn);
                 const data = await response.json();
                 
                 notif.style.display = 'block';
                 if (data.error) {
+                    showToast('Falha ao extrair PDF', 'error');
                     notif.textContent = 'Erro: ' + data.error;
                     notif.style.backgroundColor = '#FDE8E9';
                     notif.style.borderColor = '#D11124';
                     notif.style.color = '#D11124';
                 } else {
+                    showToast('Texto detectado e extraído com sucesso!', 'success');
                     notif.innerHTML = `<strong>Texto Extraído!</strong> O conteúdo foi colado na seção 3 abaixo.`;
                     textarea.value = (textarea.value ? textarea.value + "\n\n" : "") + "[DADOS EXTRAÍDOS DO PDF DO LINKEDIN]:\n" + data.text;
                 }
@@ -215,15 +264,16 @@
             const formData = new FormData(this);
             
             try {
-                const response = await fetch('/process', {
+                const response = await fetchWithRetry('/process', {
                     method: 'POST',
                     body: formData
-                });
+                }, 3, btn);
                 
                 if (response.ok) {
                     const data = await response.json();
                     
                     if (data.success) {
+                        showToast('Currículo gerado com sucesso!', 'success');
                         document.getElementById('btn-download-pdf').href = '/download/pdf/' + data.filename;
                         document.getElementById('btn-download-docx').href = '/download/docx/' + data.filename;
                         
@@ -235,7 +285,14 @@
                     }
                 } else {
                     const textError = await response.text();
-                    throw new Error(textError || 'Falha no servidor ao processar o arquivo');
+                    let errorMessage = 'Falha no servidor ao processar o arquivo';
+                    try {
+                        const jsonError = JSON.parse(textError);
+                        if (jsonError.error) errorMessage = jsonError.error;
+                    } catch (e) {
+                        if (textError) errorMessage = textError;
+                    }
+                    throw new Error(errorMessage);
                 }
             } catch (err) {
                 loadingDiv.style.display = 'none';

@@ -16,9 +16,10 @@ Ele cruza as suas experiências base com a descrição de uma vaga específica (
 ## 🛠️ Como Usar (Ambiente Local)
 
 1. Clone o repositório.
-2. Crie um arquivo `.env` na raiz do projeto com a sua chave secreta da Google:
+2. Crie um arquivo `.env` na raiz do projeto com a sua chave secreta da Google (e opcionalmente da GroqCloud para assumir gratuitamente se a quota do Gemini estourar):
    ```env
    GEMINI_API_KEY=sua_chave_aqui
+   GROQ_API_KEY=sua_chave_groq_opcional
    ```
 3. Crie e ative um ambiente virtual Python.
 4. Instale as dependências:
@@ -82,7 +83,9 @@ A IA agora mapeia suas experiências de forma numerada. Você deve colocar o tí
 ---
 
 ## 🏆 Créditos
-O arquivo base/molde (`curriculo_ats_template.docx`) que inspira o sucesso deste gerador foi idealizado de forma gratuita pela excelente **Mel (@mocinhadorh)**. Todo o mérito do design focado em ATS (cores, divisões e fontes limpas) pertence a ela. 
+O arquivo base/molde (`curriculo_ats_template.docx`) que inspira o sucesso deste gerador foi idealizado de forma gratuita pela excelente **Mel (melarchangelo9@gmail.com)**. Todo o mérito do design focado em ATS (cores, divisões e fontes limpas) pertence a ela. 
+
+Deixo também um agradecimento especial ao canal **Dev Magro**, pois foi assistindo ao [vídeo dele sobre a importância deste template para programadores](https://www.youtube.com/watch?v=Gx1H330JOgQ&t=172s) que surgiu a inspiração inicial para criar essa automação.
 
 O motor de Inteligência Artificial, o processamento de texto e a arquitetura web (todo o código) deste projeto foram desenvolvidos 100% por **[Otávio Alves (@otaviofigueredoalves)](https://github.com/otaviofigueredoalves)** de forma independente para ajudar a comunidade tech. 
 Acesse o template visual original no Google Docs: [Clique Aqui](https://docs.google.com/document/d/1TmiWHUhvlLMlAK0vtEziA9JQ85idSCtX/edit).
