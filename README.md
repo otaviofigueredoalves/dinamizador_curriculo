@@ -1,6 +1,6 @@
-# Resume Dynamizer 🚀
+# Dinamizador de Currículo 🚀
 
-O **Resume Dynamizer** é um sistema inteligente movido por Inteligência Artificial (Gemini) projetado para otimizar e adaptar currículos para sistemas ATS (Applicant Tracking Systems) de forma dinâmica e automatizada. 
+O **Dinamizador de Currículo** é um sistema inteligente movido por Inteligência Artificial (Gemini) projetado para otimizar e adaptar currículos para sistemas ATS (Applicant Tracking Systems) de forma dinâmica e automatizada. 
 
 Ele cruza as suas experiências base com a descrição de uma vaga específica (LinkedIn, Indeed ou texto livre) e injeta o resultado formatado e otimizado com palavras-chave diretamente em um documento Word, gerando também a versão final em PDF.
 
