@@ -258,3 +258,33 @@ textarea.form-control {
 .donate-modal-close:hover {
   color: #333;
 }
+
+body {
+  padding-bottom: 100px;
+}
+
+.input-button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.input-button-group .btn-primary {
+  width: auto;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+@media (max-width: 600px) {
+  .input-button-group {
+    flex-direction: column;
+  }
+  
+  .input-button-group .btn-primary {
+    width: 100%;
+    align-self: stretch;
+  }
+
+  #final-notification .input-button-group .btn-primary {
+    width: 100%;
+  }
+}

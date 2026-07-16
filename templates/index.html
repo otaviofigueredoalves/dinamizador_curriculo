@@ -28,9 +28,9 @@
                 <div class="form-group">
                     <label for="linkedin_url">2. Link da Vaga OU Texto da Vaga (Se o site bloquear robôs)</label>
                     <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Para vagas do Indeed ou sites com proteção (Security Check), apenas copie e cole todo o texto da vaga aqui.</p>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="input-button-group">
                         <textarea id="linkedin_url" name="linkedin_url" class="form-control" placeholder="Ex: https://linkedin.com/jobs/view/... OU cole a descrição inteira da vaga aqui" rows="4" required></textarea>
-                        <button type="button" class="btn-primary" id="validateLinkBtn" style="width: auto; white-space: nowrap; align-self: flex-start;">Validar Vaga</button>
+                        <button type="button" class="btn-primary" id="validateLinkBtn">Validar Vaga</button>
                     </div>
                     <div id="job-info-notification" class="alert" style="display: none; margin-top: 10px; background-color: #E3F2FD; border-color: #0A66C2; color: #0A66C2;">
                         <!-- Notificação será injetada aqui -->
@@ -40,9 +40,9 @@
                 <div class="form-group">
                     <label for="linkedin_pdf_file">2.5 Currículo do LinkedIn (PDF) - Opcional</label>
                     <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">Vá no seu perfil do LinkedIn > Mais > Salvar como PDF. Envie aqui para não digitar nada!</p>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="input-button-group">
                         <input type="file" id="linkedin_pdf_file" accept=".pdf" class="form-control" style="flex: 1;">
-                        <button type="button" class="btn-primary" id="extractProfileBtn" style="width: auto; white-space: nowrap;">Extrair Texto</button>
+                        <button type="button" class="btn-primary" id="extractProfileBtn">Extrair Texto</button>
                     </div>
                     <div id="profile-info-notification" class="alert" style="display: none; margin-top: 10px; background-color: #E3F2FD; border-color: #0A66C2; color: #0A66C2;">
                         <!-- Notificação será injetada aqui -->
@@ -65,9 +65,9 @@
                 <div id="final-notification" class="alert" style="display: none; margin-top: 20px; background-color: #0A66C2; color: #FFFFFF; border-radius: 0; padding: 20px;">
                     <h3 style="margin-top: 0; margin-bottom: 10px; font-family: 'IBM Plex Sans', sans-serif; font-weight: 600;">✅ Currículo Gerado com Sucesso!</h3>
                     <p style="margin-bottom: 20px;">Seu currículo foi adaptado perfeitamente para a vaga. Escolha o formato para baixar:</p>
-                    <div style="display: flex; gap: 10px;">
-                        <a id="btn-download-pdf" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; display: inline-block; text-align: center; font-weight: 600;">📄 Baixar em PDF</a>
-                        <a id="btn-download-docx" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; display: inline-block; text-align: center; font-weight: 600;">📝 Baixar em DOCX</a>
+                    <div class="input-button-group">
+                        <a id="btn-download-pdf" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; text-align: center;">📄 Baixar em PDF</a>
+                        <a id="btn-download-docx" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; text-align: center;">📝 Baixar em DOCX</a>
                     </div>
                 </div>
             </form>
@@ -264,9 +264,9 @@
             </div>
             <div style="background-color: #F3F2EF; padding: 15px; border-radius: 8px; text-align: center;">
                 <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Ou copie a chave Pix (CNPJ):</p>
-                <div style="display: flex; gap: 10px;">
+                <div class="input-button-group">
                     <input type="text" id="pixKey" value="63039836000110" class="form-control" style="font-family: monospace; font-size: 14px; background-color: #FFF;" readonly>
-                    <button class="btn-primary" id="copyPixBtn" style="width: auto; white-space: nowrap;">Copiar</button>
+                    <button class="btn-primary" id="copyPixBtn">Copiar</button>
                 </div>
             </div>
         </div>
