@@ -50,20 +50,46 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
 }}
 """
 
-    response = client.models.generate_content(
-        model='gemini-3.5-flash',
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            temperature=0.7,
-            response_mime_type="application/json",
-            max_output_tokens=4096,
+    raw_text = ""
+    try:
+        response = client.models.generate_content(
+            model='gemini-3.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                response_mime_type="application/json",
+                max_output_tokens=4096,
+            )
         )
-    )
+        raw_text = response.text.strip()
+    except Exception as gemini_err:
+        print(f"Erro no Gemini: {gemini_err}")
+        # Tenta Groq como fallback
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        if groq_api_key:
+            try:
+                from groq import Groq
+                print("Iniciando fallback via Groq...")
+                groq_client = Groq(api_key=groq_api_key)
+                completion = groq_client.chat.completions.create(
+                    model="llama3-70b-8192",
+                    messages=[
+                        {"role": "system", "content": "You must output valid JSON only, without markdown formatting."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=4096,
+                    response_format={"type": "json_object"}
+                )
+                raw_text = completion.choices[0].message.content.strip()
+            except Exception as groq_err:
+                print(f"Erro no Groq: {groq_err}")
+                raise RuntimeError("Nossos servidores de IA estão muito cheios no momento. Por favor, aguarde alguns instantes e tente novamente! (Sistemas de processamento temporariamente indisponíveis).")
+        else:
+            raise RuntimeError("Nossos servidores de IA estão sobrecarregados no momento. Por favor, aguarde alguns instantes e tente novamente!")
 
     try:
         from json_repair import repair_json
-        
-        raw_text = response.text.strip()
         
         # O repair_json conserta aspas não escapadas, chaves faltando no final e lixos no começo/fim.
         repaired_string = repair_json(raw_text)
