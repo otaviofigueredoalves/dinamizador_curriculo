@@ -114,6 +114,7 @@ def process():
             return jsonify({
                 "success": True, 
                 "filename": output_filename,
+                "carta_apresentacao": result_context.get("carta_apresentacao", ""),
                 "message": "Currículo adaptado com sucesso!"
             })
         except Exception as e:

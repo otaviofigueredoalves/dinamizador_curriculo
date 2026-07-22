@@ -22,8 +22,10 @@ Sua tarefa é analisar as habilidades/experiências passadas de um candidato e a
 6. HIGHLIGHTS (Resumo): Foque em cases de sucesso e experiências do histórico que sejam altamente relevantes para a posição atual. Adapte os cases conforme necessário para a vaga.
 7. EXPERIÊNCIAS (Título e Descrição): Crie um campo 'experiencias' que seja uma LISTA (array) JSON contendo objetos para cada empresa do histórico. Cada objeto deve ter 'titulo_experiencia' com o cabeçalho ("Empresa - Cargo - Senioridade 20XX - 20XX") e 'experiencia_adaptada' com a descrição.
 8. SKILLS (Skillset): Liste apenas ferramentas e recursos que o candidato tem vivência e que tenham relevância direta para a área/vaga. Separar por vírgula.
-9. VERACIDADE: Nunca invente experiências que o candidato não citou.
-26. FORMATO JSON E QUEBRAS DE LINHA: NUNCA insira quebras de linha reais dentro das strings do JSON (use \\n). NUNCA use aspas duplas (") dentro dos textos (use aspas simples). Seu retorno deve ser um JSON perfeitamente válido e escapado.
+25. VERACIDADE: Nunca invente experiências que o candidato não citou.
+26. CARTA DE APRESENTAÇÃO: Crie uma cover letter (carta de apresentação) persuasiva e curta (3 a 4 parágrafos), alinhando as experiências base com os requisitos da vaga. Inicie com uma saudação formal/moderna e finalize com uma chamada para ação.
+27. FORMATO JSON E QUEBRAS DE LINHA: NUNCA insira quebras de linha reais dentro das strings do JSON (use \\n para quebras na carta de apresentação ou no resumo). NUNCA use aspas duplas (") dentro dos textos (use aspas simples). Seu retorno deve ser um JSON perfeitamente válido e escapado.
+28. PONTUAÇÃO: Todos os textos descritivos (resumos, objetivos e descrições de experiências) devem terminar obrigatoriamente com um ponto final (.).
 
 [HABILIDADES E EXPERIÊNCIAS BASE DO CANDIDATO]:
 {base_skills}
@@ -46,7 +48,8 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
             "experiencia_adaptada": "Descrição das funções, crescimento, eventos importantes e ferramentas da empresa 2."
         }}
     ],
-    "skills_adaptadas": "Ferramenta 1, Ferramenta 2, Recurso 3"
+    "skills_adaptadas": "Ferramenta 1, Ferramenta 2, Recurso 3",
+    "carta_apresentacao": "Olá, [Nome ou Empresa]... \\n\\nCorpo da carta focando nos resultados... \\n\\nEncerramento."
 }}
 """
 
@@ -95,7 +98,7 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
         repaired_string = repair_json(raw_text)
         data = json.loads(repaired_string)
         
-        expected_keys = ["titulo_adaptado", "objetivo_adaptado", "resumo_adaptado", "skills_adaptadas"]
+        expected_keys = ["titulo_adaptado", "objetivo_adaptado", "resumo_adaptado", "skills_adaptadas", "carta_apresentacao"]
         for key in expected_keys:
             if key not in data:
                 data[key] = ""
@@ -121,5 +124,6 @@ Forneça o resultado EXATAMENTE no formato JSON abaixo, garantindo chaves e form
             "resumo_adaptado": "Falha ao gerar resumo.",
             "titulo_experiencia_1": "Motivo da Falha:",
             "experiencia_adaptada_1": response.text,
-            "skills_adaptadas": "Falha nas skills"
+            "skills_adaptadas": "Falha nas skills",
+            "carta_apresentacao": ""
         }

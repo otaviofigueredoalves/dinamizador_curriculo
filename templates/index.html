@@ -69,6 +69,14 @@
                         <a id="btn-download-pdf" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; text-align: center;">📄 Baixar em PDF</a>
                         <a id="btn-download-docx" href="#" class="btn-primary" style="background-color: #FFFFFF; color: #0A66C2; text-decoration: none; text-align: center;">📝 Baixar em DOCX</a>
                     </div>
+                    
+                    <div id="cover-letter-section" style="margin-top: 25px; background-color: #FFFFFF; color: #191919; padding: 20px; border-radius: 8px; display: none;">
+                        <h4 style="margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            Carta de Apresentação
+                            <button type="button" id="copyCoverLetterBtn" style="background: none; border: 1px solid #0A66C2; color: #0A66C2; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;">Copiar Texto</button>
+                        </h4>
+                        <div id="cover-letter-content" style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;"></div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -277,6 +285,13 @@
                         document.getElementById('btn-download-pdf').href = '/download/pdf/' + data.filename;
                         document.getElementById('btn-download-docx').href = '/download/docx/' + data.filename;
                         
+                        if (data.carta_apresentacao && data.carta_apresentacao.trim() !== "") {
+                            document.getElementById('cover-letter-content').textContent = data.carta_apresentacao;
+                            document.getElementById('cover-letter-section').style.display = 'block';
+                        } else {
+                            document.getElementById('cover-letter-section').style.display = 'none';
+                        }
+                        
                         loadingDiv.style.display = 'none';
                         finalNotif.style.display = 'block';
                         finalNotif.scrollIntoView({ behavior: 'smooth' });
@@ -302,6 +317,18 @@
                 btn.disabled = false;
                 btn.textContent = 'Dinamizar Currículo';
             }
+        });
+
+        document.getElementById('copyCoverLetterBtn').addEventListener('click', function() {
+            const text = document.getElementById('cover-letter-content').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Carta copiada para a área de transferência!', 'success');
+                const originalText = this.textContent;
+                this.textContent = 'Copiado! ✓';
+                setTimeout(() => this.textContent = originalText, 2000);
+            }).catch(err => {
+                showToast('Erro ao copiar a carta.', 'error');
+            });
         });
     </script>
     <button class="donate-btn" id="openDonateModal">
