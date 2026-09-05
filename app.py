@@ -10,6 +10,7 @@ from services.scraper import scrape_linkedin_job, scrape_linkedin_title_company,
 from services.pdf_service import extract_text_from_pdf
 from services.ai_service import adapt_resume
 from services.doc_service import process_resume_template, extract_text_from_docx, convert_docx_to_pdf
+from services.job_service import suggest_jobs
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
@@ -20,6 +21,24 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/job-search', methods=['POST'])
+def job_search():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Corpo da requisição vazio."}), 400
+
+    # Texto base do currículo (skills + experiências) para detectar a stack
+    base_text = data.get('base_text', '').strip()
+    explicit_query = data.get('query', '').strip()
+    location = data.get('location', '').strip()
+
+    if not base_text and not explicit_query:
+        return jsonify({"error": "Informe suas habilidades (campo 3) ou um termo de busca para procurar vagas."}), 400
+
+    # Retorna sempre 200 com a chave 'error' quando algo falhar, para o
+    # fetchWithRetry do front não repetir a chamada desnecessariamente.
+    return jsonify(suggest_jobs(base_text=base_text, explicit_query=explicit_query, location=location))
 
 @app.route('/api/scrape-info', methods=['POST'])
 def scrape_info():
@@ -71,12 +90,25 @@ def process():
         try:
             linkedin_url = request.form.get('linkedin_url', '').strip()
             
+            # Descrição alternativa vinda da Central de Vagas (Google Jobs/SerpAPI)
+            # Usada como fallback quando o scrape do portal falha (Cloudflare/Security Check)
+            description_override = request.form.get('job_description_override', '').strip()
+            
             job_description = ""
             if linkedin_url.startswith('http'):
-                job_description = scrape_linkedin_job(linkedin_url)
-                if not job_description or "Security Check" in job_description:
-                    # Fallback, caso o scrape falhe, vamos tentar rodar mesmo assim (mas a qualidade cai)
-                    job_description = "Falha ao extrair vaga. Baseie-se apenas na tentativa de URL: " + linkedin_url
+                if 'google.com/search' in linkedin_url:
+                    # share_link do Google Jobs: não é uma página raspável.
+                    # Usamos a descrição carregada pela Central de Vagas.
+                    job_description = description_override if description_override else \
+                        "Falha ao extrair vaga. Este link é do Google Jobs e não possui página direta: " + linkedin_url
+                else:
+                    job_description = scrape_linkedin_job(linkedin_url)
+                    if not job_description or "Security Check" in job_description:
+                        if description_override:
+                            job_description = description_override
+                        else:
+                            # Fallback, caso o scrape falhe, vamos tentar rodar mesmo assim (mas a qualidade cai)
+                            job_description = "Falha ao extrair vaga. Baseie-se apenas na tentativa de URL: " + linkedin_url
             else:
                 # O usuário colou o texto bruto da vaga (ex: contorno do Cloudflare do Indeed)
                 job_description = linkedin_url

@@ -54,7 +54,24 @@
                     <textarea id="user_skills" name="user_skills" class="form-control" placeholder="Ex: Python, Flask, React. Experiência de 3 anos desenvolvendo APIs web... Liste suas tags de habilidades principais." required></textarea>
                 </div>
 
+                <div class="form-group" id="job-search-section">
+                    <label>4. 🔎 Central de Vagas — Encontre oportunidades para o seu perfil</label>
+                    <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">
+                        A IA detecta a stack do seu currículo (ex: se você é de <strong>PHP</strong>, busca vagas de PHP) e traz resultados do Google Jobs — que agrega LinkedIn, Indeed, Gupy e outros. Clique em <strong>"Usar esta vaga"</strong> para preencher o campo 2 automaticamente.
+                    </p>
+                    <div class="job-search-bar">
+                        <input type="text" id="job_search_query" class="form-control" placeholder="Termo de busca (opcional — ex: Desenvolvedor PHP)">
+                        <input type="text" id="job_search_location" class="form-control" placeholder="Cidade (ex: São Paulo, Remoto) — resultados melhores com uma cidade" value="">
+                        <button type="button" class="btn-primary" id="jobSearchBtn">Buscar Vagas</button>
+                    </div>
+                    <div id="job-detection-note" class="alert" style="display: none; margin-top: 10px; background-color: #FFF4E5; border-color: #F5A623; color: #8A5A00;"></div>
+                    <div id="job-results" style="margin-top: 16px;"></div>
+                </div>
+
                 <div id="error-message" class="alert alert-error" style="display: none;"></div>
+                
+                <!-- Campo oculto: usado pela Central de Vagas como fallback de descrição quando o scrape do portal falhar -->
+                <input type="hidden" name="job_description_override" id="job_description_override" value="">
 
                 <button type="submit" class="btn-primary" id="submitBtn">Dinamizar Currículo</button>
 
@@ -149,6 +166,16 @@
                 notif.style.backgroundColor = '#FDE8E9';
                 notif.style.borderColor = '#D11124';
                 notif.style.color = '#D11124';
+                return;
+            }
+
+            if (url.indexOf('google.com/search') !== -1) {
+                // share_link do Google Jobs não é uma página raspável
+                notif.style.display = 'block';
+                notif.innerHTML = `<strong>Link do Google Jobs detectado!</strong> Este anúncio não possui página direta da vaga (só o agregador do Google). Não é possível validar o título — mas se você usou a Central de Vagas, a descrição já foi carregada e pode clicar direto em <strong>"Dinamizar Currículo"</strong>.`;
+                notif.style.backgroundColor = '#FFF4E5';
+                notif.style.borderColor = '#F5A623';
+                notif.style.color = '#8A5A00';
                 return;
             }
 
@@ -317,6 +344,184 @@
                 btn.disabled = false;
                 btn.textContent = 'Dinamizar Currículo';
             }
+        });
+
+        document.getElementById('jobSearchBtn').addEventListener('click', async function() {
+            const skillsText = document.getElementById('user_skills').value;
+            const queryInput = document.getElementById('job_search_query').value;
+            const locationInput = document.getElementById('job_search_location').value;
+            const resultsDiv = document.getElementById('job-results');
+            const noteDiv = document.getElementById('job-detection-note');
+            const btn = document.getElementById('jobSearchBtn');
+
+            if (!skillsText.trim() && !queryInput.trim()) {
+                noteDiv.style.display = 'block';
+                noteDiv.innerHTML = 'Preencha o campo 3 (suas habilidades) ou digite um termo de busca para encontrarmos vagas compatíveis.';
+                noteDiv.style.backgroundColor = '#FDE8E9';
+                noteDiv.style.borderColor = '#D11124';
+                noteDiv.style.color = '#D11124';
+                return;
+            }
+
+            btn.textContent = 'Buscando...';
+            btn.disabled = true;
+            noteDiv.style.display = 'none';
+            resultsDiv.innerHTML = `<div class="job-search-status">🔎 Buscando vagas compatíveis com seu perfil em LinkedIn, Indeed, Gupy e outros... Isso pode levar alguns segundos.</div>`;
+
+            try {
+                const response = await fetchWithRetry('/api/job-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        base_text: skillsText,
+                        query: queryInput,
+                        location: locationInput
+                    })
+                }, 3, btn);
+
+                const data = await response.json();
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || 'Falha ao buscar vagas');
+                }
+
+                noteDiv.style.display = 'block';
+                noteDiv.style.backgroundColor = '#E3F2FD';
+                noteDiv.style.borderColor = '#0A66C2';
+                noteDiv.style.color = '#0A66C2';
+                let noteHtml = `Busca realizada: <strong>"${escapeHtml(data.query_used || '')}"</strong>`;
+                if (data.family_label) {
+                    noteHtml += ` &nbsp;·&nbsp; Stack predominante no currículo: <strong>${escapeHtml(data.family_label)}</strong>`;
+                }
+                noteHtml += ` &nbsp;·&nbsp; Local: <strong>${escapeHtml(locationInput || 'todo o Brasil')}</strong>`;
+                noteDiv.innerHTML = noteHtml;
+
+                if (!data.jobs || data.jobs.length === 0) {
+                    // Sem vagas internas (busca remota/nacional/vazia ou sem resultados):
+                    // oferece atalhos de busca direta nos portais.
+                    let emptyHtml = '';
+                    if (data.location_mode && data.location_mode !== 'city') {
+                        emptyHtml = '<div class="job-search-status">🔎 O Google Jobs só lista vagas quando informamos uma <strong>cidade</strong> (ex: São Paulo, Rio, Remoto não é aceito). Para busca remota ou em todo o Brasil, use os atalhos abaixo para abrir a busca já pronta nos portais:</div>';
+                    } else {
+                        emptyHtml = '<div class="job-search-status">Nenhuma vaga encontrada para essa busca com cidade. Tente outro termo ou cidade, ou use os atalhos abaixo:</div>';
+                    }
+                    if (data.deep_links && data.deep_links.length) {
+                        emptyHtml += '<div class="job-links-block">';
+                        data.deep_links.forEach((link) => {
+                            emptyHtml += `<a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="btn-outline job-link-btn">↗ ${escapeHtml(link.label)}</a>`;
+                        });
+                        emptyHtml += '</div>';
+                    }
+                    resultsDiv.innerHTML = emptyHtml;
+                    return;
+                }
+
+                resultsDiv.innerHTML = '';
+                const grid = document.createElement('div');
+                grid.className = 'job-grid';
+
+                data.jobs.forEach((job) => {
+                    const card = document.createElement('div');
+                    card.className = 'job-card';
+
+                    const header = document.createElement('div');
+                    header.className = 'job-card-header';
+
+                    const titleEl = document.createElement('h4');
+                    titleEl.textContent = job.title;
+                    header.appendChild(titleEl);
+
+                    const metaEl = document.createElement('div');
+                    metaEl.className = 'job-card-meta';
+                    const parts = [];
+                    if (job.company) parts.push(`<strong>${escapeHtml(job.company)}</strong>`);
+                    if (job.location) parts.push(`📍 ${escapeHtml(job.location)}`);
+                    if (job.via) parts.push(`via ${escapeHtml(job.via)}`);
+                    if (job.posted_at) parts.push(escapeHtml(job.posted_at));
+                    metaEl.innerHTML = parts.join(' &nbsp;·&nbsp; ');
+                    header.appendChild(metaEl);
+
+                    if (job.description) {
+                        const descEl = document.createElement('p');
+                        descEl.className = 'job-card-desc';
+                        descEl.textContent = job.description.length > 320 ? job.description.slice(0, 320) + '…' : job.description;
+                        header.appendChild(descEl);
+                    }
+
+                    card.appendChild(header);
+
+                    const actions = document.createElement('div');
+                    actions.className = 'job-card-actions';
+
+                    const useBtn = document.createElement('button');
+                    useBtn.type = 'button';
+                    useBtn.className = 'btn-primary btn-use-job';
+                    useBtn.textContent = '✓ Usar esta vaga';
+                    useBtn.addEventListener('click', () => useThisJob(job));
+                    actions.appendChild(useBtn);
+
+                    if (job.link) {
+                        const openBtn = document.createElement('a');
+                        openBtn.href = job.link;
+                        openBtn.target = '_blank';
+                        openBtn.rel = 'noopener noreferrer';
+                        openBtn.className = 'btn-outline btn-open-job';
+                        openBtn.textContent = 'Abrir vaga ↗';
+                        actions.appendChild(openBtn);
+                    }
+
+                    card.appendChild(actions);
+                    grid.appendChild(card);
+                });
+
+                resultsDiv.appendChild(grid);
+                resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (err) {
+                noteDiv.style.display = 'block';
+                noteDiv.innerHTML = 'Erro ao buscar vagas: ' + escapeHtml(err.message);
+                noteDiv.style.backgroundColor = '#FDE8E9';
+                noteDiv.style.borderColor = '#D11124';
+                noteDiv.style.color = '#D11124';
+                resultsDiv.innerHTML = '';
+            } finally {
+                btn.textContent = 'Buscar Vagas';
+                btn.disabled = false;
+            }
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function useThisJob(job) {
+            const urlField = document.getElementById('linkedin_url');
+            const overrideField = document.getElementById('job_description_override');
+            const notif = document.getElementById('job-info-notification');
+            const chosenLink = job.link || job.share_link || '';
+            const isGoogleLink = chosenLink.indexOf('google.com/search') !== -1;
+
+            urlField.value = chosenLink;
+            overrideField.value = job.description || '';
+            notif.style.display = 'block';
+            notif.style.backgroundColor = '#E3F2FD';
+            notif.style.borderColor = '#0A66C2';
+            notif.style.color = '#0A66C2';
+            if (isGoogleLink) {
+                // share_link do Google Jobs: não é raspável, usamos a descrição já carregada
+                notif.innerHTML = `<strong>Vaga selecionada!</strong> Este anúncio só possui o link do Google Jobs (o portal original exige login). A descrição completa já foi carregada no campo 2 — clique direto em <strong>"Dinamizar Currículo"</strong> sem validar o link.`;
+            } else {
+                notif.innerHTML = `<strong>Vaga selecionada!</strong> O link e a descrição foram preenchidos no campo 2. Agora é só clicar em <strong>"Dinamizar Currículo"</strong> — se o site da vaga bloquear robôs, usaremos a descrição já carregada automaticamente.`;
+            }
+            showToast('Vaga carregada no campo 2!', 'success');
+            urlField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Se o usuário editar o campo 2 manualmente após usar uma vaga da Central,
+        // o override antigo não pode vazar para outra vaga/URL.
+        document.getElementById('linkedin_url').addEventListener('input', function() {
+            document.getElementById('job_description_override').value = '';
         });
 
         document.getElementById('copyCoverLetterBtn').addEventListener('click', function() {

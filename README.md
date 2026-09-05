@@ -20,7 +20,9 @@ Ele cruza as suas experiências base com a descrição de uma vaga específica (
    ```env
    GEMINI_API_KEY=sua_chave_aqui
    GROQ_API_KEY=sua_chave_groq_opcional
+   SERPAPI_KEY=sua_chave_serpapi_opcional
    ```
+   > 💡 **SERPAPI_KEY** é opcional e habilita a **Central de Vagas** (busca automática de vagas compatíveis com a stack do seu currículo, agregando LinkedIn/Indeed/Gupy via Google Jobs). Crie sua chave gratuita em [serpapi.com](https://serpapi.com) (100 buscas/mês no plano free). Sem essa chave, o resto do app funciona normalmente.
 3. Crie e ative um ambiente virtual Python.
 4. Instale as dependências:
    ```bash

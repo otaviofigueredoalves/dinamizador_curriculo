@@ -289,6 +289,141 @@ body {
   }
 }
 
+/* ==== Central de Vagas (job search) ==== */
+.job-search-bar {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.job-search-bar .form-control {
+  flex: 1;
+}
+
+.job-search-bar .btn-primary {
+  width: auto;
+  white-space: nowrap;
+}
+
+.job-search-status {
+  background-color: #F8F9FA;
+  border: 1px dashed var(--ds-border-color);
+  padding: 18px;
+  text-align: center;
+  color: var(--ds-secondary-30-text-light);
+  font-size: 14px;
+}
+
+.job-links-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.job-link-btn {
+  border-radius: 6px;
+}
+
+.job-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .job-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.job-card {
+  border: 1px solid var(--ds-border-color);
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.job-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+  border-color: #B9CBDD;
+}
+
+.job-card-header h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ds-secondary-30-text);
+  line-height: 1.35;
+  margin-bottom: 6px;
+}
+
+.job-card-meta {
+  font-size: 12.5px;
+  color: var(--ds-secondary-30-text-light);
+  line-height: 1.5;
+}
+
+.job-card-desc {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.55;
+  margin-top: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.job-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.job-card-actions .btn-use-job {
+  flex: 1;
+  min-width: 120px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.btn-outline {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--ds-accent-10);
+  font-family: var(--ds-font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border: 1px solid var(--ds-accent-10);
+  border-radius: 0;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-outline:hover {
+  background-color: #E8F1FA;
+}
+
+@media (max-width: 600px) {
+  .job-search-bar {
+    flex-direction: column;
+  }
+  .job-search-bar .btn-primary {
+    width: 100%;
+  }
+}
+
 /* Toast Notifications */
 .toast-container {
   position: fixed;
