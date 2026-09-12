@@ -54,6 +54,8 @@ docker compose up -d --build
 A única exigência para usar qualquer documento Word é que você insira as tags de variáveis (listadas abaixo) nos lugares onde deseja que a Inteligência Artificial atue.
 
 > ⚠️ **Informações Estáticas (Edição Manual):** O sistema foca apenas em dinamizar suas áreas profissionais de acordo com a vaga. Textos fixos como seu Nome, Telefones, Bairro, Nível de Idiomas e Formação Acadêmica NÃO são alterados pela IA. Eles devem ser editados por você de forma manual direto no seu arquivo DOCX, sem o uso de chaves.
+>
+> 📅 **Datas no template (padronização manual):** a IA padroniza apenas as datas dos blocos dinâmicos (resumo e experiências) — ela não acessa os campos fixos. Para não perder pontos no ATS por "formatos de data inconsistentes", normalize também as datas da Formação, Certificações e demais seções estáticas usando o formato **só-ano `YYYY`** (ex.: `2026 – Atual`) e use sempre "Atual" no período em andamento. A IA também padroniza as datas dinâmicas nesse mesmo formato.
 
 Nos blocos dinâmicos do seu documento, insira as tags abaixo. Você pode formatar as tags como quiser (Negrito, Azul, Itálico), e o sistema herdará essa formatação!
 

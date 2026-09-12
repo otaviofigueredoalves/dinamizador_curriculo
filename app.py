@@ -1,11 +1,13 @@
 import os
 import re
+import traceback
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
 from flask import Flask, render_template, request, send_file, jsonify, send_from_directory
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 from services.scraper import scrape_linkedin_job, scrape_linkedin_title_company, scrape_linkedin_profile
 from services.pdf_service import extract_text_from_pdf
 from services.ai_service import adapt_resume
@@ -17,6 +19,20 @@ app.config['UPLOAD_FOLDER'] = '/tmp/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16MB max
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    """
+    Garante resposta em JSON (o front sempre tenta ler JSON) e loga o traceback
+    no console, em vez de devolver a página HTML de "500 Internal Server Error"
+    do Flask — que aparecia no front como "Erro: <html>...".
+    """
+    if isinstance(e, HTTPException):
+        return jsonify({"success": False, "error": e.description}), e.code
+    traceback.print_exc()
+    return jsonify({"success": False, "error": f"Erro interno no servidor: {e}"}), 500
+
 
 @app.route('/')
 def index():
@@ -59,7 +75,7 @@ def scrape_profile():
     if file.filename == '':
         return jsonify({"error": "Nenhum arquivo selecionado"}), 400
         
-    if file and file.filename.endswith('.pdf'):
+    if file and os.path.splitext(file.filename)[1].lower() == '.pdf':
         filename = secure_filename(file.filename)
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(input_path)
@@ -74,16 +90,19 @@ def scrape_profile():
 @app.route('/process', methods=['POST'])
 def process():
     if 'template_file' not in request.files:
-        return "Nenhum arquivo enviado", 400
+        return jsonify({"success": False, "error": "Nenhum arquivo enviado."}), 400
         
     file = request.files['template_file']
     linkedin_url = request.form.get('linkedin_url', '')
     user_skills = request.form.get('user_skills', '')
     
     if file.filename == '':
-        return "Nenhum arquivo selecionado", 400
+        return jsonify({"success": False, "error": "Nenhum arquivo selecionado."}), 400
         
-    if file and file.filename.endswith('.docx'):
+    # Aceita .docx em qualquer caixa (.docx/.DOCX). Antes, nomes com extensão
+    # maiúscula (ou de outro formato) caíam no fim da função e retornavam None,
+    # gerando o "500 Internal Server Error" em HTML.
+    if file and os.path.splitext(file.filename)[1].lower() == '.docx':
         filename = secure_filename(file.filename)
         input_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(input_path)
@@ -160,6 +179,10 @@ def process():
                 error_msg = "Os servidores da IA do Google estão sobrecarregados no momento. Por favor, tente novamente em alguns segundos."
                 
             return jsonify({"success": False, "error": error_msg}), 500
+
+    # Fallback para formato inválido: nunca chegar ao fim sem retorno.
+    return jsonify({"success": False, "error": "Formato inválido. Envie um arquivo .docx."}), 400
+
 
 @app.route('/download/<file_type>/<filename>')
 def download_file(file_type, filename):
